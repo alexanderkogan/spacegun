@@ -101,6 +101,17 @@ describe('Application', () => {
         expect(callParameters(app.crons.register, 2)[0]).toEqual('config-reload')
         expect(app.crons.removeAllCrons).toHaveBeenCalledTimes(1)
     })
+
+    it('slacks on config load error', async () => {
+        app.options.config = 'test/test-config/config.yml'
+        process.env.LAYER = Layers.Server
+
+        const configRepo: GitConfigRepository = fromConfig(createConfig())!
+        configRepo.hasNewConfig = () => Promise.resolve(true)
+        configRepo.fetchNewConfig = () => Promise.resolve()
+
+        await app.checkForConfigChange(configRepo)
+    })
 })
 
 function createConfig(): Config {

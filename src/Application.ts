@@ -84,22 +84,24 @@ export class Application {
             this.crons.removeAllCrons()
         }
 
-        initArtifacts(artifactRepoFromConfig(config))
-        initViews(config)
-        initEvents([SlackEventRepository.fromConfig(config.slack)])
-        initCluster(KubernetesClusterRepository.fromConfig(config.kube, config.namespaces))
-        initImages(DockerImageRepository.fromConfig(config.docker))
+        try {
+            initArtifacts(artifactRepoFromConfig(config))
+            initViews(config)
+            initEvents([SlackEventRepository.fromConfig(config.slack)])
+            initCluster(KubernetesClusterRepository.fromConfig(config.kube, config.namespaces))
+            initImages(DockerImageRepository.fromConfig(config.docker))
 
-        const jobs = JobsRepositoryImpl.fromConfig(config.pipelines, this.crons)
-        initJobs(jobs)
-
-        if (process.env.LAYER === Layers.Server) {
-            const gitRepo = gitRepoFromConfig(config)
-            if (gitRepo !== undefined) {
-                await this.checkForConfigChange(gitRepo)
-                this.crons.register('config-reload', config.git!.cron, () => this.checkForConfigChange(gitRepo))
+            const jobs = JobsRepositoryImpl.fromConfig(config.pipelines, this.crons)
+            initJobs(jobs)
+        } finally {
+            if (process.env.LAYER === Layers.Server) {
+                const gitRepo = gitRepoFromConfig(config)
+                if (gitRepo !== undefined) {
+                    await this.checkForConfigChange(gitRepo)
+                    this.crons.register('config-reload', config.git!.cron, () => this.checkForConfigChange(gitRepo))
+                }
+                this.crons.startAllCrons()
             }
-            this.crons.startAllCrons()
         }
     }
 }

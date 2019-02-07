@@ -11,6 +11,11 @@ describe('SlackEventRepository', () => {
         repo = SlackEventRepository.fromConfig('http://slack')!
     })
 
+    it('should not break without slack config', () => {
+        let repository = SlackEventRepository.fromConfig()
+        expect(repository).toBeUndefined()
+    })
+
     describe('log', () => {
         beforeEach(() => {
             axios.post = axiosSuccess()
